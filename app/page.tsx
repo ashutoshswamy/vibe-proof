@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ComponentType } from "react";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from "@firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, type User } from "@firebase/auth";
 import { ArrowRight, ArrowUpRight, Check, ClockCounterClockwise, CaretDown, Copy, FileText, GearSix, Gauge, Hand, Lightning, Link, Scan, SignOut, SquaresFour, UsersThree, Warning, type IconProps } from "@phosphor-icons/react";
 import { getFirebaseAuth } from "@/lib/firebase-client";
 import { Landing } from "./landing";
@@ -35,7 +35,7 @@ export default function Home() {
   useEffect(() => { try { return onAuthStateChanged(getFirebaseAuth(), (next) => { setUser(next); setAuthReady(true); try { if (next) localStorage.setItem("vp-auth", "1"); else localStorage.removeItem("vp-auth"); } catch { /* storage blocked */ } if (next) void loadScans(next); }); } catch { queueMicrotask(() => { setAuthReady(true); setError("Firebase is not configured. Copy .env.example to .env.local and add your project keys."); }); } }, [loadScans]);
   async function runScan(event: React.FormEvent) { event.preventDefault(); setError(""); setRunning(true); try { const response = await fetch("/api/scans", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ url }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error); setScan(body); setScans((current) => [body, ...current.filter((item) => item.id !== body.id)]); setSelected(0); } catch (cause) { setError(cause instanceof Error ? cause.message : "Scan failed"); } finally { setRunning(false); } }
 
-  async function signIn() { setError(""); try { await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider()); } catch (cause) { const code = (cause as { code?: string }).code; if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") setError(cause instanceof Error ? cause.message : "Sign-in failed"); } }
+  async function signIn() { setError(""); const provider = new GoogleAuthProvider(); try { await signInWithPopup(getFirebaseAuth(), provider); } catch (cause) { const code = (cause as { code?: string }).code; if (code === "auth/popup-blocked") { try { await signInWithRedirect(getFirebaseAuth(), provider); return; } catch (redirectCause) { setError(redirectCause instanceof Error ? redirectCause.message : "Sign-in failed"); return; } } if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") setError(cause instanceof Error ? cause.message : "Sign-in failed"); } }
   if (!authReady && returning === true) return <div className="boot"><Brand /><p>Loading secure workspace…</p></div>;
   if (!user) return <Landing onSignIn={signIn} error={error} />;
 
