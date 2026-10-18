@@ -22,7 +22,7 @@ export function ProofGrid({ checks, title, meta, idle = "Hover a square to read 
   }));
   return <figure className="lp-proof" aria-label={`${title}: ${checks.length} checks, ${counts.passed} passed, ${counts.failed} failed, ${counts.manual} manual`}>
     <div className="lp-proof-head"><strong>{title}</strong><span>{meta}</span></div>
-    <div className="lp-grid" style={{ "--rows": rows, "--cols": sections.length } as React.CSSProperties} onPointerLeave={() => setActive(null)}>{cells}</div>
+    <div className="lp-grid" style={{ "--rows": rows, "--cols": sections.length } as React.CSSProperties} onPointerLeave={(event) => { if (event.pointerType === "mouse") setActive(null); }}>{cells}</div>
     <div className="lp-readout" aria-live="polite">{active ? <><span className={`lp-chip ${active.status}`}>{statusWord[active.status]}</span><span><b>{active.section}</b>: {active.title.replace(/\.$/, "")}{active.reason && <small>{active.reason}</small>}</span></> : <span className="lp-readout-idle">{idle}</span>}</div>
     <figcaption className="lp-legend"><span className="passed"><i />{counts.passed} passed</span><span className="failed"><i />{counts.failed} failed</span><span className="manual"><i />{counts.manual} manual</span></figcaption>
   </figure>;
