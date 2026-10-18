@@ -15,6 +15,8 @@ type LoadResult = { url: string; concurrency: number; duration: number; requests
 
 const icons: Record<string, ComponentType<IconProps>> = { grid: SquaresFour, scan: Scan, report: FileText, history: ClockCounterClockwise, settings: GearSix, arrow: ArrowRight, out: ArrowUpRight, copy: Copy, link: Link, signout: SignOut, team: UsersThree, check: Check, alert: Warning, caret: CaretDown, manual: Hand, stress: Lightning, gauge: Gauge };
 const label = (value: string) => { const u = new URL(value); return u.hostname === "github.com" ? u.pathname.slice(1) : u.host; };
+/** Platform errors (timeouts, crashes) can return an empty or HTML body; surface a readable message instead of a JSON parse error. */
+async function readJson(response: Response) { try { return await response.json(); } catch { throw new Error(response.ok ? "Unexpected empty response" : `Server error (${response.status}). Please try again.`); } }
 function Icon({ name }: { name: string }) { const Glyph = icons[name] ?? FileText; return <Glyph aria-hidden="true" className="icon" size={16} weight="regular" />; }
 
 export default function Home() {
@@ -30,10 +32,10 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const token = useCallback(async () => { if (!user) throw new Error("Sign in required"); return user.getIdToken(); }, [user]);
-  const loadScans = useCallback(async (currentUser: User) => { try { const response = await fetch("/api/scans", { headers: { Authorization: `Bearer ${await currentUser.getIdToken()}` } }); const body = await response.json(); if (!response.ok) throw new Error(body.error); setScans(body); if (body[0]) { setScan(body[0]); setUrl(body[0].url); } } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load scans"); } }, []);
+  const loadScans = useCallback(async (currentUser: User) => { try { const response = await fetch("/api/scans", { headers: { Authorization: `Bearer ${await currentUser.getIdToken()}` } }); const body = await readJson(response); if (!response.ok) throw new Error(body.error); setScans(body); if (body[0]) { setScan(body[0]); setUrl(body[0].url); } } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load scans"); } }, []);
   useEffect(() => { let hint = false; try { hint = localStorage.getItem("vp-auth") === "1"; } catch { /* storage blocked */ } delete document.documentElement.dataset.auth; queueMicrotask(() => setReturning(hint)); }, []);
   useEffect(() => { try { return onAuthStateChanged(getFirebaseAuth(), (next) => { setUser(next); setAuthReady(true); try { if (next) localStorage.setItem("vp-auth", "1"); else localStorage.removeItem("vp-auth"); } catch { /* storage blocked */ } if (next) void loadScans(next); }); } catch { queueMicrotask(() => { setAuthReady(true); setError("Firebase is not configured. Copy .env.example to .env.local and add your project keys."); }); } }, [loadScans]);
-  async function runScan(event: React.FormEvent) { event.preventDefault(); setError(""); setRunning(true); try { const response = await fetch("/api/scans", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ url }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error); setScan(body); setScans((current) => [body, ...current.filter((item) => item.id !== body.id)]); setSelected(0); } catch (cause) { setError(cause instanceof Error ? cause.message : "Scan failed"); } finally { setRunning(false); } }
+  async function runScan(event: React.FormEvent) { event.preventDefault(); setError(""); setRunning(true); try { const response = await fetch("/api/scans", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ url }) }); const body = await readJson(response); if (!response.ok) throw new Error(body.error); setScan(body); setScans((current) => [body, ...current.filter((item) => item.id !== body.id)]); setSelected(0); } catch (cause) { setError(cause instanceof Error ? cause.message : "Scan failed"); } finally { setRunning(false); } }
 
   async function signIn() { setError(""); const provider = new GoogleAuthProvider(); try { await signInWithPopup(getFirebaseAuth(), provider); } catch (cause) { const code = (cause as { code?: string }).code; if (code === "auth/popup-blocked") { try { await signInWithRedirect(getFirebaseAuth(), provider); return; } catch (redirectCause) { setError(redirectCause instanceof Error ? redirectCause.message : "Sign-in failed"); return; } } if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") setError(cause instanceof Error ? cause.message : "Sign-in failed"); } }
   if (!authReady && returning === true) return <div className="boot"><Brand /><p>Loading secure workspace…</p></div>;
@@ -84,7 +86,7 @@ function StressTestPanel({ user }: { user: User }) {
     try {
       const token = await user.getIdToken();
       const response = await fetch("/api/loadtest", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ url, concurrency, durationMs: durationSeconds * 1000, confirmAuthorized: confirmed }) });
-      const body = await response.json();
+      const body = await readJson(response);
       if (!response.ok) throw new Error(body.error);
       setResult(body);
     } catch (cause) {
