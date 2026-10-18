@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   cacheComponents: true,
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
+  // File tracing misses files these externals read at runtime (browsers.json, the packed Chromium binaries).
+  outputFileTracingIncludes: { "/api/scans": ["./node_modules/playwright-core/**/*.json", "./node_modules/@sparticuz/chromium/bin/**"] },
   partialPrefetching: true,
   // Same-origin auth helper: keeps redirect sign-in working where browsers partition third-party storage (Safari, mobile).
   async rewrites() {
