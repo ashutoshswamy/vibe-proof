@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
 /* Tokens. One accent (verified green); red/amber are severity only.
    Shape rule: cards 16px, controls 10px, pills fully round. */
 :root {

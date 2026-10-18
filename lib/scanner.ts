@@ -1,7 +1,7 @@
 import { lookup } from "node:dns/promises";
 import http from "node:http";
 import https from "node:https";
-import { isIP } from "node:net";
+import { BlockList, isIP } from "node:net";
 import zlib from "node:zlib";
 import { createChecklist, type CheckStatus } from "@/lib/checklist";
 import { browserChecks } from "@/lib/browser";
@@ -15,13 +15,15 @@ const MAX_REQUESTS = 90;
 
 /* ---------- network (every hop is SSRF-checked and pinned to the resolved address) ---------- */
 
+const blocked = new BlockList();
+for (const [net, bits] of [["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15], ["224.0.0.0", 4], ["240.0.0.0", 4]] as const) blocked.addSubnet(net, bits, "ipv4");
+for (const [net, bits] of [["::", 128], ["::1", 128], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8], ["64:ff9b::", 96]] as const) blocked.addSubnet(net, bits, "ipv6");
+
 function privateAddress(address: string) {
-  if (isIP(address) === 4) {
-    const [a, b] = address.split(".").map(Number);
-    return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
-  }
-  const n = address.toLowerCase();
-  return n === "::1" || n === "::" || /^(fc|fd|fe[89ab])/.test(n) || /^::ffff:(10\.|127\.|192\.168\.|172\.)/.test(n);
+  const mapped = address.toLowerCase().match(/^::ffff:(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+  if (mapped) address = mapped[1] ?? [parseInt(mapped[2], 16) >> 8, parseInt(mapped[2], 16) & 255, parseInt(mapped[3], 16) >> 8, parseInt(mapped[3], 16) & 255].join(".");
+  const family = isIP(address);
+  return family === 0 || blocked.check(address, family === 4 ? "ipv4" : "ipv6");
 }
 
 export async function validTarget(value: string) {

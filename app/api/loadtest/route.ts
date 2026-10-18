@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/request-auth";
 export const maxDuration = 20;
 
 function clientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  return request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "unknown";
 }
 
 export async function POST(request: Request) {

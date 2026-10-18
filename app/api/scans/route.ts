@@ -7,7 +7,7 @@ import { scan } from "@/lib/scan";
 export const maxDuration = 60;
 
 function clientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  return request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "unknown";
 }
 
 export async function GET(request: Request) {
