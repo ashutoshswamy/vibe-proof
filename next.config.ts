@@ -10,9 +10,14 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
   partialPrefetching: true,
+  // Same-origin auth helper: keeps redirect sign-in working where browsers partition third-party storage (Safari, mobile).
+  async rewrites() {
+    const host = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+    return host ? [{ source: "/__/:path*", destination: `https://${host}/__/:path*` }] : [];
+  },
   async headers() {
     return [{
-      source: "/(.*)",
+      source: "/((?!__/).*)", // /__/ is Firebase's auth iframe: DENY framing and COOP would break it
       headers: [
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "X-Frame-Options", value: "DENY" },
