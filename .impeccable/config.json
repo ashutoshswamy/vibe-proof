@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "lib/scanner.ts"
+        ],
+        "createdAt": "2026-10-17T20:26:41.256Z",
+        "reason": "agent: regex intentionally inspects external HTML; no image is rendered"
+      }
+    ]
+  }
+}
