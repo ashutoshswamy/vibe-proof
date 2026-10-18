@@ -1,38 +1,20 @@
 # VibeProof
 
-Website verification for the vibe-coding era. Firebase Auth protects the app; Neon Postgres stores users and scan reports.
+Pre-launch verification for vibe-coded apps. Scan a live site or a public GitHub repo against 82 launch checks across 10 areas: functionality, UI/UX, security, backend, performance, SEO, accessibility, testing, deployment, and legal/launch readiness. Every finding comes with evidence and a copyable fix prompt.
 
-## Setup
+## What it does
 
-1. Create a Firebase Web app and enable Google sign-in.
-2. Create a Firebase service account with Admin SDK access.
-3. Create a Neon database and run [`db/schema.sql`](./db/schema.sql) in Neon SQL Editor.
-4. Copy `.env.example` to `.env.local` and fill in Firebase Web config, service-account JSON, and `DATABASE_URL`.
-5. Start the app:
+- **Site scan**: fetches the URL and checks HTTPS, redirects, headers, CSP, CORS, markup, SEO, accessibility, robots/sitemap, exposed files, linked pages and assets, and secrets in client code.
+- **Browser pass**: renders the page in headless Chromium to check layout overflow at three widths, tap targets, focus, contrast, broken images and fonts, and console errors. If the browser fails or runs out of time, the static scan still returns.
+- **GitHub repo review**: paste a public repo URL. The default branch is read without cloning or running anything, and checked for committed secrets, unprotected routes, broken imports and missing tests. If the repo lists a website, the live site is scanned too and results are merged.
+- **Stress test**: a short, capped burst of requests (max 8 concurrent, 8 seconds, 100 requests) that reports latency percentiles and errors. You must confirm you're authorized to test the target.
+- **Reports**: each scan is saved with a score, findings and all 82 checks. Checks come back as passed, failed, or Manual when they need source access, credentials, provider settings or a human.
+- **Lighthouse (optional)**: adds performance, layout shift, contrast and console results via PageSpeed Insights.
 
-```bash
-npm run dev
-```
+## Limits
 
-The app signs users in with Firebase, verifies their ID token on the server, fetches the submitted URL, checks live headers/markup, and persists the report in Neon.
+Sign-in with Google is required, scan targets on private networks are rejected, and scans and stress tests are rate limited per user, IP and host. VibeProof is a bounded HTTP, HTML and browser check, not a security certification, compliance guarantee, or full red-team scan.
 
-Each scan now stores all 82 pre-deployment checklist items in `scans.checks`. URL-observable checks are marked `passed` or `failed`; checks requiring browser automation, source access, credentials, provider settings, or human review are marked `not_testable` with a reason.
+## Stack
 
-To erase and recreate the VibeProof tables manually, run [`db/reset.sql`](./db/reset.sql). This is destructive and is never run by the app.
-
-## Verification scope
-
-The scanner checks HTTPS, redirects, CSP, HTML language, empty links, form actions, image alt text, and obvious policy language. It is a bounded HTTP/HTML check, not a security certification or full browser red-team scan.
-
-## Checks
-
-```bash
-npm run lint
-npx next build --webpack
-```
-
-## Scan checks
-
-Each scan evaluates all 82 checklist items against the submitted URL. Checks that can be observed from outside (HTTP, headers, HTML, linked pages and assets, robots/sitemap, secrets in client code, exposed files, CORS, SEO, accessibility markup) get a passed or failed result with evidence. Checks that need source access, accounts, a database or a real browser are marked Manual with instructions.
-
-Optional: set `PAGESPEED_API_KEY` in `.env.local` to also run Lighthouse (performance, layout shift, color contrast, console errors) through the PageSpeed Insights API.
+Next.js 16, React 19, Tailwind 4, Firebase Auth, Neon Postgres, Playwright.
