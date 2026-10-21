@@ -78,7 +78,7 @@ export function Landing({ onSignIn, error }: { onSignIn: () => void; error: stri
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header className="lp-nav lp-wrap">
       <a href="#" className="home-link" aria-label="VibeProof home"><Brand /></a>
-      <nav aria-label="Page sections"><a href="#report">The report</a><a href="#checks">The checks</a><a href="#workflow">How it works</a></nav>
+      <nav aria-label="Page sections"><a href="#report">The report</a><a href="#workflow">How it works</a><a href="#checks">The checks</a></nav>
       <div className="lp-nav-actions"><ThemeToggle /><button className="nav-signin" type="button" onClick={onSignIn}>Sign in<ArrowUpRight size={18} aria-hidden="true" /></button></div>
     </header>
     <main id="main-content" tabIndex={-1}>
