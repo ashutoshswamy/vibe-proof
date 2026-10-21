@@ -3,10 +3,12 @@ import http from "node:http";
 import https from "node:https";
 import { BlockList, isIP } from "node:net";
 import zlib from "node:zlib";
-import { createChecklist, type CheckStatus } from "@/lib/checklist";
-import { browserChecks } from "@/lib/browser";
+import { createChecklist, type CheckStatus } from "./checklist";
+import { browserChecks } from "./browser";
+import { slowChecks } from "./slow";
+import { repairPrompt } from "./repair";
 
-export type ScanFinding = { title: string; area: string; severity: "High" | "Medium" | "Low"; copy: string; evidence: string };
+export type ScanFinding = { id?: number; repair?: string; title: string; area: string; severity: "High" | "Medium" | "Low"; copy: string; evidence: string };
 export type Verdict = { status: CheckStatus; reason: string; fix?: string };
 type Res = { url: URL; status: number; headers: http.IncomingHttpHeaders; body: string; bytes: number; truncated: boolean; ms: number; chain: string[] };
 
@@ -31,6 +33,7 @@ export async function validTarget(value: string) {
   const target = new URL(value);
   if (!/^https?:$/.test(target.protocol)) throw new Error("URL must use http or https");
   if (target.username || target.password) throw new Error("URLs with credentials are not allowed");
+  if (process.env.VIBEPROOF_ALLOW_LOCAL === "1") return { target, address: isIP(target.hostname) ? target.hostname : (await lookup(target.hostname)).address }; // CLI only: scanning your own localhost
   const addresses = isIP(target.hostname) ? [{ address: target.hostname }] : await lookup(target.hostname, { all: true, verbatim: true });
   if (!addresses.length || addresses.some(({ address }) => privateAddress(address))) throw new Error("Private network targets are not allowed");
   return { target, address: addresses[0].address };
@@ -141,7 +144,7 @@ const sensitive: [string, RegExp][] = [
 
 /* ---------- the 82 checks ---------- */
 
-export async function checkUrl(value: string) {
+export async function checkUrl(value: string, opts: { slow?: boolean } = {}) {
   const net = crawler();
   const rand = Math.random().toString(36).slice(2, 10);
   new URL(value);
@@ -150,6 +153,7 @@ export async function checkUrl(value: string) {
   if (!/html/i.test(String(page.headers["content-type"] ?? ""))) throw new Error("URL did not return an HTML page");
   const base = page.url, origin = base.origin, secure = base.protocol === "https:";
   const visual = browserChecks(base.toString());
+  const slowNet = opts.slow ? slowChecks(base.toString()) : undefined;
   const html = page.body, text = strip(html);
   const resolve = (href: string | undefined) => { try { const u = href ? new URL(href, base) : undefined; if (u) u.hash = ""; return u && /^https?:$/.test(u.protocol) ? u : undefined; } catch { return undefined; } };
 
@@ -388,11 +392,12 @@ export async function checkUrl(value: string) {
 
   // browser verdicts replace skips and passes; a static failure stays so its evidence is not lost
   for (const [id, v] of Object.entries(await visual)) if (c[Number(id)]?.status !== "failed") c[Number(id)] = v;
+  if (slowNet) for (const [id, v] of Object.entries(await slowNet)) c[Number(id)] = v; // slow-network mode: signup double-submit result replaces the manual placeholder
   return { verdicts: c, url: base.toString(), statusCode: page.status };
 }
 
-export async function scanUrl(value: string) {
-  const r = await checkUrl(value);
+export async function scanUrl(value: string, opts: { slow?: boolean } = {}) {
+  const r = await checkUrl(value, opts);
   return report(r.url, r.verdicts, r.statusCode);
 }
 
@@ -400,7 +405,7 @@ export function report(url: string, c: Record<number, Verdict>, statusCode?: num
   const checklist = createChecklist(Object.fromEntries(Object.entries(c).map(([id, v]) => [Number(id), { status: v.status, reason: v.reason }])));
   const high = new Set([17, 18, 23, 25, 26, 49, 67, 69, 71, 72, 81]);
   const low = new Set([14, 44, 46, 48, 50, 58, 65]);
-  const findings: ScanFinding[] = checklist.filter((k) => k.status === "failed").map((k) => ({ title: k.title.replace(/\.$/, ""), area: k.section, severity: high.has(k.id) ? "High" : low.has(k.id) ? "Low" : "Medium", copy: c[k.id].fix ?? k.reason ?? "", evidence: k.reason ?? "" }));
+  const findings: ScanFinding[] = checklist.filter((k) => k.status === "failed").map((k) => { const f = { id: k.id, title: k.title.replace(/\.$/, ""), area: k.section, severity: (high.has(k.id) ? "High" : low.has(k.id) ? "Low" : "Medium") as ScanFinding["severity"], copy: c[k.id].fix ?? k.reason ?? "", evidence: k.reason ?? "" }; return { ...f, repair: repairPrompt(f, url) }; });
   findings.sort((a, b) => ["High", "Medium", "Low"].indexOf(a.severity) - ["High", "Medium", "Low"].indexOf(b.severity));
   const score = Math.max(0, Math.round(100 - findings.reduce((sum, f) => sum + (f.severity === "High" ? 6 : f.severity === "Medium" ? 3 : 1.5), 0)));
   return { url, score, findings, checklist, statusCode, checkedAt: new Date().toISOString() };

@@ -1,4 +1,4 @@
-import { pingOnce, validTarget } from "@/lib/scanner";
+import { pingOnce, validTarget } from "./scanner";
 
 /**
  * A small, capped synthetic load check: enough concurrent requests to see latency

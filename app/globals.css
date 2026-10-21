@@ -441,3 +441,5 @@ html[data-auth="1"] .lp { visibility: hidden; }
 
 /* Rounded actions throughout the workspace. */
 button:is(.prompt-button, .ghost-button, .signout, .theme-toggle), .input-wrap button, .next-action button, .stress-presets button { border-radius: 999px; }
+
+.link-button { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }

@@ -1,7 +1,7 @@
 import { posix } from "node:path";
 import { Readable } from "node:stream";
 import zlib from "node:zlib";
-import { findSecrets, type Verdict } from "@/lib/scanner";
+import { findSecrets, type Verdict } from "./scanner";
 
 const UA = "VibeProof/1.0 verification bot";
 const MAX_KEPT = 150 * 1024 * 1024;

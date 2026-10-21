@@ -1,6 +1,7 @@
 -- DESTRUCTIVE: deletes all VibeProof users, scans, and rate-limit events.
 BEGIN;
 
+DROP TABLE IF EXISTS evidence_log;
 DROP TABLE IF EXISTS rate_limit_events;
 DROP TABLE IF EXISTS scans;
 DROP TABLE IF EXISTS users;
@@ -24,7 +25,10 @@ CREATE TABLE scans (
   score INTEGER NOT NULL DEFAULT 0 CHECK (score BETWEEN 0 AND 100),
   findings JSONB NOT NULL DEFAULT '[]'::jsonb,
   checks JSONB NOT NULL DEFAULT '[]'::jsonb,
-  checked_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  checked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  slow BOOLEAN NOT NULL DEFAULT false,
+  head TEXT,
+  retest_of UUID REFERENCES scans(id) ON DELETE SET NULL
 );
 
 CREATE INDEX scans_user_checked_at_idx ON scans(firebase_uid, checked_at DESC);
@@ -36,5 +40,20 @@ CREATE TABLE rate_limit_events (
 );
 
 CREATE INDEX rate_limit_events_key_created_idx ON rate_limit_events(key_hash, created_at DESC);
+
+CREATE TABLE evidence_log (
+  run_id UUID NOT NULL,
+  seq INTEGER NOT NULL,
+  ts TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  prev TEXT NOT NULL,
+  data JSONB NOT NULL,
+  hash TEXT NOT NULL,
+  PRIMARY KEY (run_id, seq)
+);
+
+CREATE OR REPLACE FUNCTION evidence_log_append_only() RETURNS trigger AS $$
+BEGIN RAISE EXCEPTION 'evidence_log is append-only'; END $$ LANGUAGE plpgsql;
+CREATE TRIGGER evidence_log_no_change BEFORE UPDATE OR DELETE ON evidence_log FOR EACH ROW EXECUTE FUNCTION evidence_log_append_only();
 
 COMMIT;

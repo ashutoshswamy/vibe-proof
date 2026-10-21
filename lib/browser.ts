@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright-core";
-import { validTarget, type Verdict } from "@/lib/scanner";
+import { validTarget, type Verdict } from "./scanner";
 
 /* Real-browser pass: renders the page in Chromium and judges what raw HTML cannot (layout, taps, focus, contrast, console).
    Returns verdicts keyed by checklist id. Any failure to launch or time out returns {} so the static scan still ships. */
@@ -11,7 +11,7 @@ const skip = (reason: string): Verdict => ({ status: "not_testable", reason });
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const list = (items: string[], max = 3) => items.slice(0, max).join(", ") + (items.length > max ? ` and ${items.length - max} more` : "");
 
-async function launch() {
+export async function launch() {
   if (process.env.VERCEL) {
     const sparticuz = (await import("@sparticuz/chromium")).default;
     return chromium.launch({ args: sparticuz.args, executablePath: await sparticuz.executablePath(), headless: true });

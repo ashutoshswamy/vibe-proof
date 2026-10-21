@@ -18,3 +18,12 @@ Sign-in with Google is required, scan targets on private networks are rejected, 
 ## Stack
 
 Next.js 16, React 19, Tailwind 4, Firebase Auth, Neon Postgres, Playwright.
+
+## Tamper-evident evidence, offline verify, retests, slow-network mode
+
+- **Chain**: every run is logged as `start → 82 check records → end`; each record stores the SHA-256 of the previous one (`lib/chain.mjs`). On the web app it is saved to the append-only `evidence_log` table (UPDATE/DELETE blocked by trigger), but the DB is not the proof: download the report (**Download proof report**) and check it yourself.
+- **Verify offline** (no server, no DB): `npx vibeproof verify report.json [--head <pinned hash>]`. Names the first tampered record, or detects truncation. Pin the head hash somewhere you trust to also catch a fully rewritten file.
+- **Retest**: `npx vibeproof retest report.json --check 30 --allow-local` (CLI) or **Retest this fix** (web). It re-runs the same URL and mode, links to the original head hash, and shows **Fix Verified** only if the link, the test fingerprint (URL, slow mode, checklist) and the original failure all check out: `npx vibeproof verify retest.json --original report.json --check 30`.
+- **Slow-network mode** (`--slow`, or the checkbox): Chromium only talks to a reverse proxy inside the runner (`lib/slow.ts`) that adds 900 ms to every request and replays a state-changing request 120 ms later. A signup that creates two accounts fails check 30 and gets a repair prompt. A normal scan marks check 30 manual.
+- **CLI**: `npx vibeproof scan <url> [--slow] [--out f] [--allow-local]`. Demo target: `npm run demo` (buggy) or `node scripts/demo-site.mjs --fixed`, then `--allow-local` scans `http://127.0.0.1:4000`.
+- Apply `db/schema.sql` to add `evidence_log` and the new `scans` columns (`db/reset.sql` already includes them).

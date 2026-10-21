@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { sql } from "@/lib/db";
+import { sql } from "./db";
 
 export async function enforceRateLimit(key: string, maxRequests: number, windowMinutes = 1) {
   const hashedKey = createHash("sha256").update(key).digest("hex");

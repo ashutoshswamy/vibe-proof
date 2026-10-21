@@ -1,12 +1,13 @@
 {
-  "name": "vibe-proof",
+  "name": "vibeproof",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "demo": "node scripts/demo-site.mjs"
   },
   "dependencies": {
     "@firebase/app": "^0.16.3",
@@ -19,7 +20,8 @@
     "next": "16.4.2",
     "playwright-core": "^1.64.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -36,5 +38,8 @@
   },
   "overrides": {
     "jwks-rsa": "3.2.2"
+  },
+  "bin": {
+    "vibeproof": "bin/vibeproof.mjs"
   }
 }

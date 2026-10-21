@@ -29,3 +29,25 @@ CREATE TABLE IF NOT EXISTS rate_limit_events (
 );
 
 CREATE INDEX IF NOT EXISTS rate_limit_events_key_created_idx ON rate_limit_events(key_hash, created_at DESC);
+
+-- Tamper-evident evidence: append-only, each row carries the hash of the previous row of its run.
+-- The DB is only storage; integrity is proven by `npx vibeproof verify <exported report>`, which needs no DB or server.
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS slow BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS head TEXT;
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS retest_of UUID REFERENCES scans(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS evidence_log (
+  run_id UUID NOT NULL,
+  seq INTEGER NOT NULL,
+  ts TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  prev TEXT NOT NULL,
+  data JSONB NOT NULL,
+  hash TEXT NOT NULL,
+  PRIMARY KEY (run_id, seq)
+);
+
+CREATE OR REPLACE FUNCTION evidence_log_append_only() RETURNS trigger AS $$
+BEGIN RAISE EXCEPTION 'evidence_log is append-only'; END $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS evidence_log_no_change ON evidence_log;
+CREATE TRIGGER evidence_log_no_change BEFORE UPDATE OR DELETE ON evidence_log FOR EACH ROW EXECUTE FUNCTION evidence_log_append_only();

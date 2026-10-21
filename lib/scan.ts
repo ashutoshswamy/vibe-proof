@@ -1,5 +1,5 @@
-import { checkRepo, parseRepo, repoInfo } from "@/lib/repo";
-import { checkUrl, report, type Verdict } from "@/lib/scanner";
+import { checkRepo, parseRepo, repoInfo } from "./repo";
+import { checkUrl, report, type Verdict } from "./scanner";
 
 const rank = { failed: 2, passed: 1, not_testable: 0 } as const;
 
@@ -12,12 +12,12 @@ function merge(parts: (Verdict | undefined)[]): Verdict | undefined {
 }
 
 /** Accepts a site URL or a public GitHub repository URL. */
-export async function scan(input: string) {
+export async function scan(input: string, opts: { slow?: boolean } = {}) {
   const repo = parseRepo(input);
-  if (!repo) return report(...(await checkUrl(input).then((r) => [r.url, r.verdicts, r.statusCode] as const)));
+  if (!repo) return report(...(await checkUrl(input, opts).then((r) => [r.url, r.verdicts, r.statusCode] as const)));
   const meta = await repoInfo(repo);
   const homepage = meta.homepage && /^https?:\/\//i.test(meta.homepage) ? meta.homepage : undefined;
-  const [source, site] = await Promise.all([checkRepo(repo, meta), homepage ? checkUrl(homepage).catch(() => undefined) : undefined]);
+  const [source, site] = await Promise.all([checkRepo(repo, meta), homepage ? checkUrl(homepage, opts).catch(() => undefined) : undefined]);
   const verdicts: Record<number, Verdict> = {};
   for (let id = 1; id <= 82; id++) {
     const v = merge([site?.verdicts[id], source.verdicts[id]]);
