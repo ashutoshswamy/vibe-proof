@@ -20,6 +20,7 @@
   --accent-text: var(--imperial-blue);
   --accent-ink: var(--white-convolvulus);
   --accent-soft: color-mix(in srgb, var(--imperial-blue) 8%, var(--white-convolvulus));
+  --band: var(--imperial-blue);
   --red: #DC2626;
   --red-text: color-mix(in srgb, var(--red) 85%, var(--carbon));
   --red-soft: color-mix(in srgb, var(--red) 8%, var(--bg));
@@ -40,8 +41,10 @@
   --line: color-mix(in srgb, var(--cool-silver) 35%, var(--graphite));
   --ink: var(--white-convolvulus);
   --muted: var(--cool-silver);
-  --accent-text: color-mix(in srgb, var(--imperial-blue) 30%, var(--white-convolvulus));
-  --accent-soft: color-mix(in srgb, var(--imperial-blue) 25%, var(--carbon));
+  --accent: #4a63e0;
+  --accent-text: #a5b4ff;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--carbon));
+  --band: color-mix(in srgb, var(--imperial-blue) 62%, var(--carbon));
   --red: #E5484D;
   --red-text: color-mix(in srgb, var(--red) 65%, var(--white-convolvulus));
   --red-soft: color-mix(in srgb, var(--red) 12%, var(--bg));
@@ -64,7 +67,8 @@ button { cursor: pointer; }
 .wordmark { display: inline-flex; color: #000; white-space: nowrap; }
 .wordmark .brand-vibe { color: #000; }
 .wordmark .brand-accent { color: var(--imperial-blue); }
-:root[data-theme="dark"] .brand .wordmark { padding: 4px 8px; border-radius: 999px; background: var(--white-convolvulus); }
+:root[data-theme="dark"] .wordmark, :root[data-theme="dark"] .wordmark .brand-vibe { color: var(--ink); }
+:root[data-theme="dark"] .wordmark .brand-accent { color: var(--accent-text); }
 .brand-mark { width: 22px; height: 22px; display: flex; align-items: flex-end; gap: 3px; }
 .brand-mark i { display: block; width: 5px; border-radius: 3px; background: var(--accent); }
 .brand-mark i:nth-child(1) { height: 11px; opacity: 0.5; }
