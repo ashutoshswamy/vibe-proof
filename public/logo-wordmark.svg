@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="140" height="28" viewBox="0 0 140 28" role="img" aria-label="vibeproof">
-  <g fill="#0a7a58" transform="translate(0 3)">
+  <g fill="#021f94" transform="translate(0 3)">
     <rect x="0" y="11" width="5" height="11" rx="2.5" opacity="0.5"/>
     <rect x="8" y="5" width="5" height="17" rx="2.5" opacity="0.75"/>
     <rect x="16" y="0" width="5" height="22" rx="2.5"/>
   </g>
-  <text x="32" y="21" font-family="Sora, 'Avenir Next', 'Segoe UI', sans-serif" font-size="21" font-weight="700" letter-spacing="-0.63" fill="#10181c">vibe<tspan fill="#0a7a58">proof</tspan></text>
+  <text x="32" y="21" font-family="Rosefana, 'Avenir Next', 'Segoe UI', sans-serif" font-size="21" font-weight="400" letter-spacing="-0.63" fill="#000000">vibe<tspan fill="#021f94">proof</tspan></text>
 </svg>
