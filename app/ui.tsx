@@ -2,8 +2,12 @@
 
 import { Moon, Sun } from "@phosphor-icons/react";
 
+export function Wordmark() {
+  return <span className="wordmark"><span className="brand-vibe">vibe</span><span className="brand-accent">proof</span></span>;
+}
+
 export function Brand() {
-  return <div className="brand"><span className="brand-mark"><i /><i /><i /></span><span>vibe<span className="brand-accent">proof</span></span></div>;
+  return <div className="brand"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><Wordmark /></div>;
 }
 
 /** The inline script in layout.tsx sets data-theme before paint; this only flips and remembers it. */

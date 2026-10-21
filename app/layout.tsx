@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Sora } from "next/font/google";
+import { DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { connection } from "next/server";
 import { siteDescription, siteKeywords, siteName, siteUrl } from "@/lib/site";
 import "./globals.css";
 
-const display = Sora({ subsets: ["latin"], variable: "--f-display", display: "swap" });
+const display = localFont({ src: "../public/font/Rosefana.otf", variable: "--f-display", display: "swap", weight: "400" });
 const body = DM_Sans({ subsets: ["latin"], variable: "--f-body", display: "swap" });
 
 const ogImage = { url: "/og-image.png", width: 1730, height: 909, alt: "VibeProof: verify before you ship" };
@@ -30,7 +31,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f3f5f6" }, { media: "(prefers-color-scheme: dark)", color: "#090d0f" }],
+  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f5f2f3" }, { media: "(prefers-color-scheme: dark)", color: "#101317" }],
 };
 
 export const instant = false;
