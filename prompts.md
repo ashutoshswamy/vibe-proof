@@ -20,7 +20,9 @@ Working mode for every session: `/caveman ultra` and `/ponytail ultra` (terse re
 | `81e9676` | Ashutosh Swamy | updated the readme | README accuracy |
 | `13da452` | Sairaj Dhuri | updated UI | Landing page and global styles (no Claude Code prompts) |
 | `feb7be0` | Ashutosh Swamy | Merge pull request #1 from sairajdhuri/main | Merge of the UI update (no prompts) |
-| not committed | | | Tamper-evident evidence and slow-network mode |
+| `5f7d9ec` | Ashutosh Swamy | added the twists in the application | Tamper-evident evidence and slow-network mode |
+| `d2a24b6` | Ashutosh Swamy | updated the dark theme and the icon | Dark theme, grid hover, social preview |
+| `39d9f8e` | Ashutosh Swamy | updated the navbar order | Navbar order |
 
 ---
 
@@ -143,7 +145,7 @@ Working mode for every session: `/caveman ultra` and `/ponytail ultra` (terse re
 
 ---
 
-## Not committed yet: tamper-evident evidence and slow-network mode
+## `5f7d9ec` added the twists in the application: tamper-evident evidence and slow-network mode
 
 **Goal:** add five verifiable features for the jury review while keeping the original flow (URL → scan → finding → repair prompt → retest) working in both the web app and the CLI.
 
@@ -162,3 +164,24 @@ The jury holds a copy of this brief and will verify the implementation live. Mee
 - Apply the database migrations: first the reset, then the schema (twice, once per redo). This included installing `psql`.
 - Ask what remains to be done after each step.
 - Create this prompt history, first from the current session and then from the start of the project, then present it as a combined, professional summary.
+
+---
+
+## `d2a24b6` updated the dark theme and the icon
+
+**Goal:** make the dark theme look right and refresh the social preview.
+
+**Combined prompt**
+
+1. Fix the dark theme of the site using the `frontend-design` skill. Changes: a brighter accent (`#4a63e0`) so buttons, focus rings and the brand mark show on near-black, a deeper navy for the blue sections, blue "passed" squares in the report grid, and wordmarks without the white block behind them.
+2. Fix the report-grid squares on hover: they washed out to a pale colour and the dark ring sat right against the square.
+3. The borders of the hovered and selected squares overlapped neighbouring squares. The ring is now drawn inside the square and the hovered square is stacked above its neighbours.
+4. Write an image-generation prompt for updating the Open Graph image to match the website theme. The resulting `public/og-image.png`, the favicons and `site.webmanifest` were updated in this commit.
+
+---
+
+## `39d9f8e` updated the navbar order
+
+**Goal:** match the navbar to the page order.
+
+**Combined prompt:** order the navbar links as The report, How it works, The checks.
